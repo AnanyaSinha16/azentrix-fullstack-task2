@@ -1,3 +1,9 @@
+import { AsyncLocalStorage } from "async_hooks";
+(globalThis as any).AsyncLocalStorage = AsyncLocalStorage;
+
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { createServer } from "http";
 import next from "next";
 import { Server as SocketIOServer } from "socket.io";
@@ -7,7 +13,7 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
 const port = parseInt(process.env.PORT || "3000", 10);
 
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname, port, dir: process.cwd() });
 const handler = app.getRequestHandler();
 
 app.prepare().then(() => {

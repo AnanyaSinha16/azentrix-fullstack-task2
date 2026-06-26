@@ -1,8 +1,20 @@
 # Azentrix Full-Stack Task 2 — Kanban Board
 
-Real-time collaborative kanban application built for the Azentrix full-stack assessment.
+## Task 2
+**Problem Statement:**  
+Remote teams lack a lightweight, self-hostable task collaboration tool. Most existing tools are either too bloated or too expensive for small teams. 
 
-**Live demo:** _Add your Render URL after deployment, e.g. `https://azentrix-fullstack-task2.onrender.com`_
+**Task to Do:**  
+Build a Multi-User Task Management System (mini Trello) where: 
+* Users can register and log in using JWT or session-based auth 
+* Boards contain columns (To Do / In Progress / Done) with draggable cards 
+* Cards support title, description, assignee, due date, and priority tag 
+* Two users on the same board see updates in near real-time (WebSockets or polling) 
+* Admins can manage users; Members can only manage their own cards 
+* The app must be deployed on a free tier (Render, Railway, Vercel, etc.) with a live link shared in the README
+
+**Live demo:** [https://azentrix-fullstack-task2.onrender.com](https://azentrix-fullstack-task2.onrender.com) (Default template URL - configure your Render service mapping to this subdomain or update it after setting up a custom domain/service name)
+
 
 ## Features
 
