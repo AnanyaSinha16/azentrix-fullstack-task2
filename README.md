@@ -13,7 +13,7 @@ Build a Multi-User Task Management System (mini Trello) where:
 * Admins can manage users; Members can only manage their own cards 
 * The app must be deployed on a free tier (Render, Railway, Vercel, etc.) with a live link shared in the README
 
-**Live demo:** [https://azentrix-fullstack-task2-chi.vercel.app](https://azentrix-fullstack-task2-chi.vercel.app)
+**Live demo:** [https://azentrix-fullstack-task2-delta.vercel.app/](https://azentrix-fullstack-task2-delta.vercel.app/)
 
 
 ## Features
