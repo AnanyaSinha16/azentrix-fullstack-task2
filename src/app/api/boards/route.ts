@@ -1,26 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ColumnStatus } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { getSessionFromRequest, unauthorized } from "@/lib/auth";
-
-const DEFAULT_COLUMNS: { title: string; status: ColumnStatus; order: number }[] = [
-  { title: "To Do", status: ColumnStatus.TODO, order: 0 },
-  { title: "In Progress", status: ColumnStatus.IN_PROGRESS, order: 1 },
-  { title: "Done", status: ColumnStatus.DONE, order: 2 },
-];
+import { connectDB } from "@/lib/mongodb";
+import Board from "@/models/Board";
+import Activity from "@/models/Activity";
 
 export async function GET(request: NextRequest) {
   const session = await getSessionFromRequest(request);
   if (!session) return unauthorized();
 
-  const boards = await prisma.board.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      columns: { orderBy: { order: "asc" }, include: { _count: { select: { cards: true } } } },
-    },
-  });
+  await connectDB();
+  const boards = await Board.find().populate("createdBy", "name email").sort({ createdAt: -1 });
 
-  return NextResponse.json({ boards });
+  return NextResponse.json({
+    boards: boards.map((b) => ({
+      id: b._id.toString(),
+      title: b.title,
+      description: b.description,
+      createdBy: b.createdBy,
+      createdAt: b.createdAt,
+    })),
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -28,20 +27,38 @@ export async function POST(request: NextRequest) {
   if (!session) return unauthorized();
 
   const body = await request.json();
-  const title = typeof body.title === "string" ? body.title.trim() : "";
-  if (!title) {
+  const { title, description } = body;
+
+  if (!title?.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
-  const board = await prisma.board.create({
-    data: {
-      title,
-      columns: { create: DEFAULT_COLUMNS },
-    },
-    include: {
-      columns: { orderBy: { order: "asc" }, include: { _count: { select: { cards: true } } } },
-    },
+  await connectDB();
+  const board = await Board.create({
+    title: title.trim(),
+    description: description?.trim() ?? "",
+    createdBy: session.id,
+    members: [session.id],
   });
 
-  return NextResponse.json({ board }, { status: 201 });
+  await Activity.create({
+    userId: session.id,
+    userName: session.name,
+    action: "created board",
+    entity: "board",
+    entityId: board._id.toString(),
+    entityName: board.title,
+    boardId: board._id.toString(),
+    boardName: board.title,
+  });
+
+  return NextResponse.json({
+    board: {
+      id: board._id.toString(),
+      title: board.title,
+      description: board.description,
+      createdBy: session.id,
+      createdAt: board.createdAt,
+    },
+  }, { status: 201 });
 }

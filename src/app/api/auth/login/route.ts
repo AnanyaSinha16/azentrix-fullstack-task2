@@ -1,52 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
-import { prisma } from "@/lib/prisma";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
+import Activity from "@/models/Activity";
 import { createToken, setAuthCookie } from "@/lib/auth";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
 
 export async function POST(request: NextRequest) {
   try {
+    await connectDB();
     const body = await request.json();
-    const parsed = loginSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 400 });
+    const { email, password } = body;
+
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password required" }, { status: 400 });
     }
 
-    const { email, password } = parsed.data;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await user.comparePassword(password);
     if (!valid) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = await createToken({
-      id: user.id,
+    const sessionUser = {
+      id: user._id.toString(),
       email: user.email,
       name: user.name,
       role: user.role,
+      avatar: user.avatar ?? "",
+    };
+
+    const token = await createToken(sessionUser);
+    const response = NextResponse.json({ user: sessionUser });
+    setAuthCookie(response, token);
+
+    // Log activity
+    await Activity.create({
+      userId: user._id,
+      userName: user.name,
+      action: "logged in",
+      entity: "user",
     });
 
-    const response = NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    });
-    setAuthCookie(response, token);
     return response;
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

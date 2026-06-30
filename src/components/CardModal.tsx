@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Priority } from "@prisma/client";
 import { CardData, UserSummary } from "@/types";
 
 interface CardModalProps {
@@ -13,6 +12,8 @@ interface CardModalProps {
   onDelete?: () => Promise<void>;
   boardId: string;
 }
+
+const PRIORITIES = ["low", "medium", "high"] as const;
 
 export function CardModal({
   card,
@@ -27,16 +28,16 @@ export function CardModal({
   const [description, setDescription] = useState("");
   const [assigneeId, setAssigneeId] = useState<string>("");
   const [dueDate, setDueDate] = useState("");
-  const [priority, setPriority] = useState<Priority>(Priority.MEDIUM);
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (card) {
       setTitle(card.title);
-      setDescription(card.description);
+      setDescription(card.description || "");
       setAssigneeId(card.assigneeId ?? "");
       setDueDate(card.dueDate ? card.dueDate.slice(0, 10) : "");
-      setPriority(card.priority);
+      setPriority(card.priority as "low" | "medium" | "high" || "medium");
     }
   }, [card]);
 
@@ -59,46 +60,47 @@ export function CardModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="card-surface max-h-[90vh] w-full max-w-lg overflow-y-auto p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl max-h-[90vh] w-full max-w-lg overflow-y-auto p-6 shadow-2xl animate-slideUp border border-slate-100">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Card details</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">
-            ✕
+          <h2 className="text-lg font-semibold text-slate-800">Task details</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors text-xl">
+            &times;
           </button>
         </div>
 
         {!canEdit && (
-          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 border border-amber-100">
             Read-only: you can only edit cards assigned to you (admins can edit all).
           </p>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Title</label>
+          <div className="form-group">
+            <label className="label">Title</label>
             <input
-              className="input-field"
+              className="input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={!canEdit}
               required
             />
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Description</label>
+          <div className="form-group">
+            <label className="label">Description</label>
             <textarea
-              className="input-field min-h-[100px]"
+              className="input min-h-[100px] resize-none"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={!canEdit}
+              placeholder="Add a details description for this task..."
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium">Assignee</label>
+            <div className="form-group">
+              <label className="label">Assignee</label>
               <select
-                className="input-field"
+                className="input"
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
                 disabled={!canEdit}
@@ -111,26 +113,26 @@ export function CardModal({
                 ))}
               </select>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Due date</label>
+            <div className="form-group">
+              <label className="label">Due date</label>
               <input
                 type="date"
-                className="input-field"
+                className="input"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 disabled={!canEdit}
               />
             </div>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Priority</label>
+          <div className="form-group">
+            <label className="label">Priority</label>
             <select
-              className="input-field"
+              className="input capitalize"
               value={priority}
-              onChange={(e) => setPriority(e.target.value as Priority)}
+              onChange={(e) => setPriority(e.target.value as any)}
               disabled={!canEdit}
             >
-              {Object.values(Priority).map((p) => (
+              {PRIORITIES.map((p) => (
                 <option key={p} value={p}>
                   {p}
                 </option>
@@ -138,7 +140,7 @@ export function CardModal({
             </select>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
             {canEdit && (
               <button type="submit" className="btn-primary" disabled={saving}>
                 {saving ? "Saving..." : "Save changes"}
@@ -150,7 +152,7 @@ export function CardModal({
             {canEdit && onDelete && (
               <button
                 type="button"
-                className="ml-auto rounded-lg bg-rose-600 px-4 py-2 text-sm text-white hover:bg-rose-700"
+                className="ml-auto btn-danger"
                 onClick={async () => {
                   await onDelete();
                   onClose();

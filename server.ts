@@ -35,7 +35,7 @@ app.prepare().then(() => {
       socket.handshake.headers.cookie
         ?.split(";")
         .map((c) => c.trim())
-        .find((c) => c.startsWith("azentrix_token="))
+        .find((c) => c.startsWith("taskflow_token="))
         ?.split("=")[1];
 
     if (!token) {

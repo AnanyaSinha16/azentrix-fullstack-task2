@@ -1,4 +1,3 @@
-import { Role } from "@prisma/client";
 import { SessionUser } from "@/types";
 
 type CardLike = {
@@ -7,7 +6,7 @@ type CardLike = {
 };
 
 export function isAdmin(user: SessionUser): boolean {
-  return user.role === Role.ADMIN;
+  return user.role === "admin";
 }
 
 export function canEditCard(user: SessionUser, card: CardLike): boolean {
@@ -19,3 +18,4 @@ export function canDeleteCard(user: SessionUser, card: CardLike): boolean {
   if (isAdmin(user)) return true;
   return card.creatorId === user.id || card.assigneeId === user.id;
 }
+

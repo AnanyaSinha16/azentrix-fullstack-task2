@@ -1,17 +1,14 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { Role } from "@prisma/client";
 import type { SessionUser } from "@/types";
 
-export const AUTH_COOKIE = "azentrix_token";
+export const AUTH_COOKIE = "taskflow_token";
 export type { SessionUser };
 
 function getSecret() {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error("JWT_SECRET is not set");
-  }
+  if (!secret) throw new Error("JWT_SECRET is not set");
   return new TextEncoder().encode(secret);
 }
 
@@ -21,6 +18,7 @@ export async function createToken(user: SessionUser): Promise<string> {
     email: user.email,
     name: user.name,
     role: user.role,
+    avatar: user.avatar ?? "",
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -35,7 +33,7 @@ export async function verifyToken(token: string): Promise<SessionUser | null> {
       typeof payload.id !== "string" ||
       typeof payload.email !== "string" ||
       typeof payload.name !== "string" ||
-      (payload.role !== "ADMIN" && payload.role !== "MEMBER")
+      (payload.role !== "admin" && payload.role !== "member")
     ) {
       return null;
     }
@@ -44,6 +42,7 @@ export async function verifyToken(token: string): Promise<SessionUser | null> {
       email: payload.email,
       name: payload.name,
       role: payload.role,
+      avatar: typeof payload.avatar === "string" ? payload.avatar : "",
     };
   } catch {
     return null;

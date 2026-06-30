@@ -14,7 +14,8 @@ export function formatDate(date: string | null): string {
 }
 
 export const priorityColors: Record<string, string> = {
-  LOW: "bg-emerald-100 text-emerald-800",
-  MEDIUM: "bg-amber-100 text-amber-800",
-  HIGH: "bg-rose-100 text-rose-800",
+  low: "bg-emerald-100 text-emerald-800",
+  medium: "bg-amber-100 text-amber-800",
+  high: "bg-rose-100 text-rose-800",
 };
+
