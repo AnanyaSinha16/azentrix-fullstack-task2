@@ -3,14 +3,15 @@ services:
     name: azentrix-fullstack-task2
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && npx prisma db push && npm run db:seed
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
+      - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: NEXT_PUBLIC_APP_URL
         sync: false
+
